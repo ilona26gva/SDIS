@@ -16,6 +16,11 @@ public class Client {
 
 		String message = oper + " ";
 		
+		String thisisatest = "";
+		
+
+		System.out.println(thisisatest);
+		
 		if (oper == "register") {
 			if (args.size() == 2) {
 				message += args.get(0) + " ";
