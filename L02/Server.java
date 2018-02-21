@@ -1,14 +1,60 @@
 
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.Hashtable;
 
+class Advertiser implements Runnable {
+	
+	private int port;
+	private String mcastAddr;
+	private int mcastPort;
+	
+	public Advertiser(int port, String mcastAddr, int mcastPort) {
+		this.port = port;
+		this.mcastAddr = mcastAddr;
+		this.mcastPort = mcastPort;
+	}
+	
+	@Override
+	public void run() {
+		InetAddress addr = null;
+		
+		try {
+			addr = InetAddress.getByName(mcastAddr);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			DatagramSocket serverSocket = new DatagramSocket();
+			
+			String message = Integer.toString(port);
+			byte[] msgBytes = message.getBytes();
+			
+			DatagramPacket packet = new DatagramPacket(msgBytes, msgBytes.length, addr, mcastPort);
+			serverSocket.send(packet);
+			
+			System.out.println("Port sent");
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
+}
+
 public class Server {
 	
-	public static void main(String[] args) throws IOException {		
-
+	public static void main(String[] args) throws IOException {				
 		Hashtable<String, String> table = new Hashtable<String,String>();
 
 		table.put("24-21-JL", "Quintino");
@@ -16,6 +62,12 @@ public class Server {
 		table.put("24-65-JF", "Edward");
 
 		int port = Integer.parseInt(args[0]);
+		String mcastAddr = args[1];
+		int mcastPort = Integer.parseInt(args[2]);
+		
+		Advertiser advertiser = new Advertiser(port, mcastAddr, mcastPort);
+		Thread thread = new Thread(advertiser);
+		thread.start();
 		
 		byte[] buf = new byte[256];
 		
@@ -27,8 +79,6 @@ public class Server {
 		s.close();
 		
 		s = new DatagramSocket();
-		
-		InetAddress ip = p.getAddress();
 
 		byte[] data = p.getData();
 

@@ -11,8 +11,8 @@ public class Client {
 
 	public static void main(String[] args) throws IOException {
 
-		String host = args[0];
-		int port = Integer.parseInt(args[1]);
+		String mcastAddr = args[0];
+		int mcastPort = Integer.parseInt(args[0]);
 		String oper = args[2];
 
 		String message = oper + " ";
