@@ -12,7 +12,7 @@ public class Client {
 	public static void main(String[] args) throws IOException {
 
 		String mcastAddr = args[0];
-		int mcastPort = Integer.parseInt(args[0]);
+		int mcastPort = Integer.parseInt(args[1]);
 		String oper = args[2];
 
 		String message = oper + " ";
@@ -33,13 +33,13 @@ public class Client {
 
 		byte[] buf = message.getBytes();
 		DatagramSocket s = new DatagramSocket();
-		DatagramPacket p = new DatagramPacket(buf, buf.length, InetAddress.getByName(host), port);
+		DatagramPacket p = new DatagramPacket(buf, buf.length, InetAddress.getByName(mcastAddr), mcastPort);
 
 		s.send(p);
 
 		s.close();
 		
-		s = new DatagramSocket(port);
+		s = new DatagramSocket(mcastPort);
 
 		//waits for answer
 		byte[] bufr = new byte[256]; 
