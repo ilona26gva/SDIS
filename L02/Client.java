@@ -33,13 +33,13 @@ public class Client {
 
 		byte[] buf = message.getBytes();
 		DatagramSocket s = new DatagramSocket();
-		DatagramPacket p = new DatagramPacket(buf, buf.length, InetAddress.getByName(mcastAddr), mcastPort);
+		DatagramPacket p = new DatagramPacket(buf, buf.length, InetAddress.getByName(host), port);
 
 		s.send(p);
 
 		s.close();
 		
-		s = new DatagramSocket(mcastPort);
+		s = new DatagramSocket(port);
 
 		//waits for answer
 		byte[] bufr = new byte[256]; 
