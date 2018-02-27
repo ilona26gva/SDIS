@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
 class Advertiser implements Runnable {
 
 	private int port;
@@ -19,7 +20,6 @@ class Advertiser implements Runnable {
 		this.port = port;
 		this.mcastAddr = mcastAddr;
 		this.mcastPort = mcastPort;
-
 	}
 
 	@Override
@@ -43,6 +43,8 @@ class Advertiser implements Runnable {
 			DatagramPacket packet = new DatagramPacket(msgBytes, msgBytes.length, addr, mcastPort);
 			serverSocket.send(packet);
 
+			serverSocket.close();
+			
 			System.out.println("Port sent");
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
@@ -58,11 +60,11 @@ public class Server {
 
 	private static Hashtable<String, String> table = new Hashtable<String,String>();
 
+	private static int TIME_INTERVAL = 1000;
+
 	public static void main(String[] args) throws IOException {		
 
-		table.put("24-21-JL", "Quintino");
-		table.put("53-56-LK", "Washington");
-		table.put("24-65-JF", "Edward");
+		addHashValues();
 
 		int port = Integer.parseInt(args[0]);
 		String mcastAddr = args[1];
@@ -72,7 +74,7 @@ public class Server {
 		Thread thread = new Thread(advertiser);
 
 		byte[] buf = new byte[256];
-
+		
 
 		while(true) {
 
@@ -101,9 +103,8 @@ public class Server {
 			s.close();
 
 		}
+	}	
 
-	}
-	
 	/**
 	 * Schedules the thread
 	 * @param thread Thread to be scheduled
@@ -118,7 +119,7 @@ public class Server {
 
 		Timer timer = new Timer();
 		long delay = 0;
-		long intevalPeriod = 1 * 1000; 
+		long intevalPeriod = 1 * TIME_INTERVAL; 
 
 		// schedules the task to be run in an interval 
 		timer.scheduleAtFixedRate(task, delay,
@@ -160,6 +161,14 @@ public class Server {
 		System.out.println(result);
 
 		return result;
-
+	}
+	
+	/**
+	 * Adds values to the HashTable
+	 */
+	public static void addHashValues() {
+		table.put("24-21-JL", "Quintino");
+		table.put("53-56-LK", "Washington");
+		table.put("24-65-JF", "Edward");
 	}
 }
