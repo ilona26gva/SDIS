@@ -1,6 +1,7 @@
 
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.io.IOException;
@@ -9,6 +10,13 @@ import java.util.Hashtable;
 import java.util.Timer;
 import java.util.TimerTask;
 
+//advertiser uses multicastsocket to send info to multiple clientes
+//server uses unicastsocket to send info to the client that wants the info
+
+/*
+ * The datagramSocket is used to send packet.
+ * The multiple clients are all connected to the multicastsocket 
+ */
 
 class Advertiser implements Runnable {
 
@@ -20,6 +28,10 @@ class Advertiser implements Runnable {
 		this.port = port;
 		this.mcastAddr = mcastAddr;
 		this.mcastPort = mcastPort;
+	}
+	
+	public void runThread() {
+		run();
 	}
 
 	@Override
@@ -35,15 +47,16 @@ class Advertiser implements Runnable {
 		}
 
 		try {
-			DatagramSocket serverSocket = new DatagramSocket();
+			MulticastSocket mcastSocket = new MulticastSocket(this.mcastPort);
+			//DatagramSocket serverSocket = new DatagramSocket();
 
 			String message = Integer.toString(port);
 			byte[] msgBytes = message.getBytes();
 
 			DatagramPacket packet = new DatagramPacket(msgBytes, msgBytes.length, addr, mcastPort);
-			serverSocket.send(packet);
-
-			serverSocket.close();
+			
+			mcastSocket.setTimeToLive(1);
+			mcastSocket.send(packet);			
 			
 			System.out.println("Port sent");
 		} catch (SocketException e) {
@@ -60,7 +73,7 @@ public class Server {
 
 	private static Hashtable<String, String> table = new Hashtable<String,String>();
 
-	private static int TIME_INTERVAL = 1000;
+	private static int TIME_INTERVAL = 1;
 
 	public static void main(String[] args) throws IOException {		
 
@@ -69,6 +82,8 @@ public class Server {
 		int port = Integer.parseInt(args[0]);
 		String mcastAddr = args[1];
 		int mcastPort = Integer.parseInt(args[2]);
+		
+		InetAddress ip = InetAddress.getByName(mcastAddr);
 
 		Advertiser advertiser = new Advertiser(port, mcastAddr, mcastPort);
 		Thread thread = new Thread(advertiser);
@@ -95,7 +110,6 @@ public class Server {
 
 			p = new DatagramPacket(response, response.length, ip, port);
 
-			//serves as multicast
 			System.out.println("multicast: " + mcastAddr + "" + mcastPort + ":" + port);
 
 			s.send(p);
@@ -113,13 +127,18 @@ public class Server {
 		TimerTask task = new TimerTask() {
 			@Override
 			public void run() {
+
+				System.out.println("here");				
+				
 				thread.start();
+
+				System.out.println("here1");
 			}
 		};
 
 		Timer timer = new Timer();
 		long delay = 0;
-		long intevalPeriod = 1 * TIME_INTERVAL; 
+		long intevalPeriod = TIME_INTERVAL * 1000; 
 
 		// schedules the task to be run in an interval 
 		timer.scheduleAtFixedRate(task, delay,
