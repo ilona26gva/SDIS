@@ -14,7 +14,16 @@ public class Client {
 		String oper = args[2];
 		InetAddress ip = InetAddress.getByName(mcastAddr);
 
-		int port = getPort(ip, mcastPort);
+		String receivedMessage = getMessage(ip, mcastPort);
+		
+		String splited[] = receivedMessage.trim().split(" ");
+		String receivedAddress = splited[0];		
+		String receivedPort = splited[1];	
+		
+		int port = Integer.parseInt(receivedPort);
+		
+		InetAddress ipAddress = InetAddress.getByName(receivedAddress);
+			
 
 		System.out.println("Received port: " + port);		
 				
@@ -38,13 +47,13 @@ public class Client {
 		byte[] buf = new byte[256];
 		buf = message.getBytes();
 		DatagramSocket s = new DatagramSocket();
-		DatagramPacket p = new DatagramPacket(buf, buf.length, ip, port);
+		DatagramPacket p = new DatagramPacket(buf, buf.length, ipAddress, port);
 
 		s.send(p);
 
 		s.close();
 		
-		s = new DatagramSocket(port);
+		s = new DatagramSocket();
 
 		//waits for answer
 		byte[] bufr = new byte[256]; 
@@ -68,7 +77,7 @@ public class Client {
 	 * @return Returns the server port from the message
 	 * @throws IOException
 	 */
-	public static int getPort(InetAddress ip, int mcastPort) throws IOException {
+	public static String getMessage(InetAddress ip, int mcastPort) throws IOException {
 		
 		MulticastSocket mcastSocket = new MulticastSocket(mcastPort);
 
@@ -86,8 +95,8 @@ public class Client {
 		byte[] data = msgPacket.getData();
 
 		String receivedPort = new String(data);			
-		
-		return Integer.parseInt(receivedPort.trim());		
+		 
+		return receivedPort;
 		
 	}
 }

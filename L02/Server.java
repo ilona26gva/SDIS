@@ -9,6 +9,8 @@ import java.net.DatagramPacket;
 import java.util.Hashtable;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 //advertiser uses multicastsocket to send info to multiple clientes
 //server uses unicastsocket to send info to the client that wants the info
@@ -22,17 +24,16 @@ class Advertiser implements Runnable {
 
 	private int port;
 	private String mcastAddr;
+	private InetAddress ucastAddr;
 	private int mcastPort;
 
-	public Advertiser(int port, String mcastAddr, int mcastPort) {
+	public Advertiser(int port, String mcastAddr, int mcastPort) throws UnknownHostException {
 		this.port = port;
+		this.ucastAddr = InetAddress.getLocalHost();
 		this.mcastAddr = mcastAddr;
 		this.mcastPort = mcastPort;
 	}
 	
-	public void runThread() {
-		run();
-	}
 
 	@Override
 	public void run() {
@@ -50,7 +51,7 @@ class Advertiser implements Runnable {
 			MulticastSocket mcastSocket = new MulticastSocket(this.mcastPort);
 			//DatagramSocket serverSocket = new DatagramSocket();
 
-			String message = Integer.toString(port);
+			String message = ucastAddr.getHostAddress() +  " " +  Integer.toString(port);
 			byte[] msgBytes = message.getBytes();
 
 			DatagramPacket packet = new DatagramPacket(msgBytes, msgBytes.length, addr, mcastPort);
@@ -86,14 +87,14 @@ public class Server {
 		InetAddress ip = InetAddress.getByName(mcastAddr);
 
 		Advertiser advertiser = new Advertiser(port, mcastAddr, mcastPort);
-		Thread thread = new Thread(advertiser);
+	
+		new ScheduledThreadPoolExecutor(1).scheduleWithFixedDelay(advertiser, 0, TIME_INTERVAL, TimeUnit.SECONDS);
+		
 
 		byte[] buf = new byte[256];
 		
 
 		while(true) {
-
-			scheduleThread(thread);
 
 			DatagramSocket s = new DatagramSocket(port);
 			DatagramPacket p = new DatagramPacket(buf, buf.length);
@@ -108,42 +109,17 @@ public class Server {
 			String a = processMessage(data);
 			byte[] response = a.getBytes();
 
-			p = new DatagramPacket(response, response.length, ip, port);
+			DatagramPacket serverRes = new DatagramPacket(response, response.length, p.getAddress(), p.getPort());
 
 			System.out.println("multicast: " + mcastAddr + "" + mcastPort + ":" + port);
 
-			s.send(p);
+			s.send(serverRes);
 
 			s.close();
 
 		}
 	}	
 
-	/**
-	 * Schedules the thread
-	 * @param thread Thread to be scheduled
-	 */
-	public static void scheduleThread(Thread thread) {
-		TimerTask task = new TimerTask() {
-			@Override
-			public void run() {
-
-				System.out.println("here");				
-				
-				thread.start();
-
-				System.out.println("here1");
-			}
-		};
-
-		Timer timer = new Timer();
-		long delay = 0;
-		long intevalPeriod = TIME_INTERVAL * 1000; 
-
-		// schedules the task to be run in an interval 
-		timer.scheduleAtFixedRate(task, delay,
-				intevalPeriod);
-	}
 
 	/**
 	 * Processes message received by a Client
